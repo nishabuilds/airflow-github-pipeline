@@ -1,24 +1,4 @@
 # Databricks notebook source
-from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-w.secrets.create_scope(scope="github")
-print("created")
-print("scopes:", [s.name for s in w.secrets.list_scopes()])
-
-# COMMAND ----------
-
-import requests
-token = dbutils.secrets.get(scope="github", key="pat")
-r = requests.get(
-    "https://api.github.com/repos/apache/airflow",
-    headers={"Authorization": f"Bearer {token}"},
-    timeout=30,
-)
-print(r.status_code, r.json()["stargazers_count"])
-print("rate limit remaining:", r.headers["X-RateLimit-Remaining"])
-
-# COMMAND ----------
-
 # MAGIC %sql
 # MAGIC create catalog if not exists gh;
 # MAGIC create schema if not exists gh.bronze;
