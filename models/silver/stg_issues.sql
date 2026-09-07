@@ -1,4 +1,9 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='incremental',
+    unique_key='issue_id',
+    incremental_strategy='merge',
+    on_schema_change='append_new_columns'
+) }}
 
 with source as (
     select
@@ -14,6 +19,9 @@ with source as (
         payload:pull_request is not null        as is_pull_request,
         ingested_at
     from {{ source('bronze', 'raw_airflow_issues') }}
+    {% if is_incremental() %}
+        where ingested_at >= (select max(ingested_at) from {{ this }})
+    {% endif %}
 ),
 
 deduped as (
