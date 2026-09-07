@@ -22,7 +22,7 @@ print("rate limit remaining:", r.headers["X-RateLimit-Remaining"])
 # MAGIC %sql
 # MAGIC create catalog if not exists gh;
 # MAGIC create schema if not exists gh.bronze;
-# MAGIC create table if not exists gh.bronze.airflow_issues (
+# MAGIC create table if not exists gh.bronze.raw_airflow_issues (
 # MAGIC     ingested_at timestamp,
 # MAGIC     payload     string
 # MAGIC );
@@ -40,10 +40,11 @@ since = spark.sql("""
     select coalesce(
         max(payload:updated_at::timestamp),
         timestamp'2026-06-01'
-    ) from gh.bronze.airflow_issues
+    ) from gh.bronze.raw_airflow_issues
 """).collect()[0][0]
 
-def fetch_issues(since, max_pages=10):
+
+def fetch_issues(since, max_pages=50):
     url = "https://api.github.com/repos/apache/airflow/issues"
     params = {
         "state": "all",
@@ -74,7 +75,7 @@ if records:
     rows = [Row(ingested_at=run_ts, payload=json.dumps(x)) for x in records]
     (spark.createDataFrame(rows)
         .write.format("delta").mode("append")
-        .saveAsTable("gh.bronze.airflow_issues"))
+        .saveAsTable("gh.bronze.raw_airflow_issues"))
 
 print(f"appended {len(records)} records")
 
@@ -86,7 +87,7 @@ display(spark.sql("""
         count(distinct payload:id::string)      as distinct_ids,
         min(payload:updated_at::timestamp)      as oldest,
         max(payload:updated_at::timestamp)      as newest
-    from gh.bronze.airflow_issues
+    from gh.bronze.raw_airflow_issues
 """))
 
 # COMMAND ----------
@@ -97,5 +98,5 @@ display(spark.sql("""
         count(distinct payload:id::string)  as distinct_ids,
         min(payload:updated_at::timestamp)  as oldest,
         max(payload:updated_at::timestamp)  as newest
-    from gh.bronze.airflow_issues
+    from gh.bronze.raw_airflow_issues
 """))
