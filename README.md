@@ -4,7 +4,7 @@ A scheduled ELT pipeline that ingests issue and pull request data from the GitHu
 
 This README explains the decisions behind the design rather than restating the code. The code is in `models/` and `notebooks/`.
 
-![Dashboard](images/dashboard.png)
+![Dashboard](images/dashboard_screenshot_airflow_repo_activity.png)
 
 ## Architecture
 
