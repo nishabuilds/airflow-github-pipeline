@@ -13,7 +13,7 @@ with source as (
         payload:closed_at::timestamp            as closed_at,
         payload:pull_request is not null        as is_pull_request,
         ingested_at
-    from {{ source('bronze', 'airflow_issues') }}
+    from {{ source('bronze', 'raw_airflow_issues') }}
 ),
 
 deduped as (
